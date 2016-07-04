@@ -1,0 +1,2 @@
+# DiarizationGroundTruthTool
+Manual diarization help
