@@ -5,8 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiarizationGroundTruthTool"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
-    </Grid>
+        Title="Diarization GT Tool" Height="350" Width="525" ContentRendered="runAfterInitialDraw">
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo/>
+    </Window.TaskbarItemInfo>
+    <DockPanel Margin="0" LastChildFill="True">
+        <TextBlock x:Name="txtTime" DockPanel.Dock="Top" TextWrapping="Wrap" Text="TextBlock" FontSize="36" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Center"/>
+        <DockPanel Height="30" DockPanel.Dock="Top" LastChildFill="False" Margin="5,0,0,5">
+            <Button x:Name="btnRun" DockPanel.Dock="Left" Content="Run" Width="75" Margin="0,0,5,0" Click="btnRun_Click"/>
+            <Button x:Name="btnStopAndExport" DockPanel.Dock="Left" Content="Stop &amp; Export" Margin="0,0,5,0" Padding="5,1" Click="btnStopAndExport_Click"/>
+            <Button x:Name="btnStopAndReset" DockPanel.Dock="Right" Content="Stop &amp; Reset" Margin="0,0,5,0" Padding="5,1" Click="btnStopAndReset_Click"/>
+        </DockPanel>
+        <TextBox x:Name="txtDisp" Text="Diarization Ground Truth Tool" VerticalScrollBarVisibility="Auto" IsReadOnly="True" IsUndoEnabled="False" HorizontalScrollBarVisibility="Auto"/>
+    </DockPanel>
 </Window>
