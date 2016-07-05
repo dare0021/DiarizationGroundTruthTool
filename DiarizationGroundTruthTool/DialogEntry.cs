@@ -24,7 +24,7 @@ namespace DiarizationGroundTruthTool
         override
         public String ToString()
         {
-            return "Speaker " + id + ": (" + startingTime.ToString(@"hh\:mm\:ss") + " ~ " + endTime.ToString(@"hh\:mm\:ss") + ")\n";
+            return "Speaker " + id + ": (" + startingTime.ToString() + " ~ " + endTime.ToString() + ")\n";
         }
     }
 }
