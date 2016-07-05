@@ -23,6 +23,8 @@ namespace DiarizationGroundTruthTool
     public partial class MainWindow : Window
     {
         System.Timers.Timer updateTimer = new System.Timers.Timer(1000 / 30);
+        List<Char> dingbats = new List<Char> { '-', '\\', '|', '/' };
+        List<Char>.Enumerator iter;
         DateTime lastUpdate = DateTime.MinValue;
         DateTime updateTimerStartedAt;
 
@@ -30,10 +32,13 @@ namespace DiarizationGroundTruthTool
         {
             InitializeComponent();
 
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us");
+            CultureInfo useng = new CultureInfo("en-US");
+            useng.NumberFormat.CurrencySymbol = "\\";
+            Thread.CurrentThread.CurrentCulture = useng;
+            Thread.CurrentThread.CurrentUICulture = useng;
             updateTimer.Enabled = false;
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(update);
+            iter = dingbats.GetEnumerator();
 
             this.SizeChanged += new SizeChangedEventHandler(resizeComponents);
             this.Closing += new System.ComponentModel.CancelEventHandler(closing);
@@ -69,8 +74,9 @@ namespace DiarizationGroundTruthTool
         private void update(object source, System.Timers.ElapsedEventArgs e) 
         {
             // timer runs on its own thread means the thread context defaults back to the system context
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us");
+            CultureInfo useng = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = useng;
+            Thread.CurrentThread.CurrentUICulture = useng;
 
             DateTime now = e.SignalTime;
             TimeSpan dt = now - lastUpdate;
@@ -80,7 +86,12 @@ namespace DiarizationGroundTruthTool
             }
             try
             {
-                Dispatcher.Invoke(new Action(() => { txtTime.Text = (now - updateTimerStartedAt).ToString(@"hh\:mm\:ss"); }), System.Windows.Threading.DispatcherPriority.Render);
+                if (!iter.MoveNext())
+                {
+                    iter = dingbats.GetEnumerator();
+                    iter.MoveNext();
+                }
+                Dispatcher.Invoke(new Action(() => { txtTime.Text = (now - updateTimerStartedAt).ToString(@"hh\:mm\:ss"); txtProgress.Text = "" + iter.Current; }), System.Windows.Threading.DispatcherPriority.Render);
             }
             catch (TaskCanceledException e2)
             {
