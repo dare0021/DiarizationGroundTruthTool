@@ -51,8 +51,7 @@ namespace DiarizationGroundTruthTool
             this.Closing += new System.ComponentModel.CancelEventHandler(closing);
             this.KeyDown += new KeyEventHandler(keyDownWrapper);
             this.KeyUp += new KeyEventHandler(keyUpWrapper);
-
-            txtTime.Text = "00:00:00.0000";
+            
             displayText("Records the time when you press a number button and when you release the button.\n" + 
                 "3 second prep time before starting.\n" + 
                 "Different keyboard support different number of simultaneous input");
@@ -65,6 +64,7 @@ namespace DiarizationGroundTruthTool
 
         private void resizeComponents(object sender, System.Windows.SizeChangedEventArgs e)
         {
+            txtDisp.ScrollToEnd();
         }
 
         private void closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -295,6 +295,7 @@ namespace DiarizationGroundTruthTool
         private void btnResume_Click(object sender, RoutedEventArgs e)
         {
             stopwatch.Start();
+            updateButtons();
         }
 
         private void export()
