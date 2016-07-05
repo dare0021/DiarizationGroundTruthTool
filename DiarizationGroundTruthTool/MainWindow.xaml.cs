@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -33,6 +34,7 @@ namespace DiarizationGroundTruthTool
 
         DateTime lastUpdate = DateTime.MinValue;
         DateTime updateTimerStartedAt;
+        String exportDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
 
         public MainWindow()
         {
@@ -323,7 +325,30 @@ namespace DiarizationGroundTruthTool
             {
                 exportText += dialog;
             }
-            System.Console.WriteLine(exportText);
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Untitled"; // Default file name
+            dlg.DefaultExt = ".txt"; // Default file extension
+            dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
+            dlg.OverwritePrompt = true;
+            dlg.CheckPathExists = true;
+            dlg.AddExtension = true;
+            dlg.CreatePrompt = false;
+            dlg.ValidateNames = true;
+            dlg.Title = "Export";
+            dlg.InitialDirectory = exportDir;
+
+            // Show save file dialog box
+            bool? result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string savePath = dlg.FileName;
+                exportDir = savePath.Substring(0, savePath.LastIndexOf('\\'));
+                File.WriteAllText(savePath, exportText);
+            }
         }
     }
 }
