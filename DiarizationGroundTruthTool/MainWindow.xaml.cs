@@ -24,6 +24,7 @@ namespace DiarizationGroundTruthTool
     /// </summary>
     public partial class MainWindow : Window
     {
+        System.Timers.Timer countdownTimer = new System.Timers.Timer(1000);
         System.Timers.Timer updateTimer = new System.Timers.Timer(1000 / 60);
         Stopwatch stopwatch = new Stopwatch();
         List<DialogEntry> dialogEntries = new List<DialogEntry>();
@@ -32,6 +33,7 @@ namespace DiarizationGroundTruthTool
         List<char> activePersons = new List<char>();
         
         String exportDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        int countdown;
 
         public MainWindow()
         {
@@ -45,6 +47,7 @@ namespace DiarizationGroundTruthTool
             updateButtons();
             btnExport.IsEnabled = false;
             btnResume.IsEnabled = false;
+            countdownTimer.Elapsed += new System.Timers.ElapsedEventHandler(countdownEvent);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(update);
 
             this.SizeChanged += new SizeChangedEventHandler(resizeComponents);
@@ -231,11 +234,11 @@ namespace DiarizationGroundTruthTool
 
         private void start()
         {
-            txtDisp.Text = "Started at " + DateTime.Now.ToString("HH:mm:ss tt");
+            countdown = 3;
+            countdownTimer.Start();
             activePersons.Clear();
             dialogEntries.Clear();
             ongoingDialogs.Clear();
-            stopwatch.Restart();
             updateButtons();
         }
 
@@ -248,9 +251,20 @@ namespace DiarizationGroundTruthTool
             DateTime now = e.SignalTime;
             try
             {
+                if (countdownTimer.Enabled)
+                {
+                    Dispatcher.Invoke(new Action(() => {
+                        txtTime.Text = "Starting in: " + countdown;
+                    }), System.Windows.Threading.DispatcherPriority.Render);
+                }
+                else
+                {
+                    Dispatcher.Invoke(new Action(() => {
+                        var elapsedTime = getElapsedTime().ToString();
+                        txtTime.Text = elapsedTime.Substring(0, elapsedTime.Length - 3);
+                    }), System.Windows.Threading.DispatcherPriority.Render);
+                }
                 Dispatcher.Invoke(new Action(() => {
-                    var elapsedTime = getElapsedTime().ToString();
-                    txtTime.Text = elapsedTime.Substring(0, elapsedTime.Length-3);
                     String txt = "";
                     foreach (var k in activePersons)
                     {
@@ -263,6 +277,27 @@ namespace DiarizationGroundTruthTool
             {
                 System.Console.WriteLine(e2.StackTrace);
             }
+        }
+
+        private void countdownEvent(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (countdown <= 1)
+            {
+                countdownTimer.Stop();
+                stopwatch.Restart();
+                try
+                {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        txtDisp.Text = "Started at " + DateTime.Now.ToString("HH:mm:ss tt");
+                    }), System.Windows.Threading.DispatcherPriority.Render);
+                }
+                catch (TaskCanceledException e2)
+                {
+                    System.Console.WriteLine(e2.StackTrace);
+                }
+            }
+            countdown--;
         }
 
         private TimeSpan getElapsedTime()
