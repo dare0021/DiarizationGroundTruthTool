@@ -24,13 +24,12 @@ namespace DiarizationGroundTruthTool
     /// </summary>
     public partial class MainWindow : Window
     {
-        System.Timers.Timer updateTimer = new System.Timers.Timer(1000 / 30);
+        System.Timers.Timer updateTimer = new System.Timers.Timer(1000 / 60);
+        Stopwatch stopwatch = new Stopwatch();
         List<DialogEntry> dialogEntries = new List<DialogEntry>();
         Dictionary<int, DialogEntry> ongoingDialogs = new Dictionary<int, DialogEntry>();
         List<Key> pressedKeys = new List<Key>();
         List<char> activePersons = new List<char>();
-        List<char> progressDingbats = new List<char>(){ '-', '\\', '|', '/' };
-        List<char>.Enumerator progressDingbatIter;
 
         DateTime lastUpdate = DateTime.MinValue;
         DateTime updateTimerStartedAt;
@@ -44,9 +43,6 @@ namespace DiarizationGroundTruthTool
             CultureInfo useng = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = useng;
             Thread.CurrentThread.CurrentUICulture = useng;
-            //GetEnumerator() returns head, which is before first, and contains garbage
-            progressDingbatIter = progressDingbats.GetEnumerator();
-            progressDingbatIter.MoveNext();
 
             updateButtons();
             btnExport.IsEnabled = false;
@@ -57,8 +53,8 @@ namespace DiarizationGroundTruthTool
             this.Closing += new System.ComponentModel.CancelEventHandler(closing);
             this.KeyDown += new KeyEventHandler(keyDownWrapper);
             this.KeyUp += new KeyEventHandler(keyUpWrapper);
-            
-            txtTime.Text = (new DateTime(0)).ToString("HH:mm:ss");
+
+            txtTime.Text = "00:00:00.0000";
             displayText("Records the time when you press a number button and when you release the button.\n" + 
                 "3 second prep time before starting.\n" + 
                 "Different keyboard support different number of simultaneous input");
@@ -242,6 +238,7 @@ namespace DiarizationGroundTruthTool
             dialogEntries.Clear();
             ongoingDialogs.Clear();
             updateTimer.Start();
+            stopwatch.Start();
             updateButtons();
         }
 
@@ -259,16 +256,9 @@ namespace DiarizationGroundTruthTool
             }
             try
             {
-                if (!progressDingbatIter.MoveNext())
-                {
-                    progressDingbatIter = progressDingbats.GetEnumerator();
-                    progressDingbatIter.MoveNext();
-                }
-                // prevent variable capture due to Diapatcher lambda function
-                var progressDingbat = progressDingbatIter.Current;
                 Dispatcher.Invoke(new Action(() => {
-                    txtTime.Text = (now - updateTimerStartedAt).ToString(@"hh\:mm\:ss");
-                    txtProgress.Text = "" + progressDingbat;
+                    var elapsedTime = getElapsedTime().ToString();
+                    txtTime.Text = elapsedTime.Substring(0, elapsedTime.Length-3);
                     String txt = "";
                     foreach (var k in activePersons)
                     {
@@ -287,12 +277,13 @@ namespace DiarizationGroundTruthTool
 
         private TimeSpan getElapsedTime()
         {
-            return lastUpdate - updateTimerStartedAt;
+            return stopwatch.Elapsed;
         }
         
         private void stop()
         {
             updateTimer.Stop();
+            stopwatch.Stop();
             updateButtons();
         }
 
