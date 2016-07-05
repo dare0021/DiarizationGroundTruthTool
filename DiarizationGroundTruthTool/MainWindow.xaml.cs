@@ -24,6 +24,8 @@ namespace DiarizationGroundTruthTool
     public partial class MainWindow : Window
     {
         System.Timers.Timer updateTimer = new System.Timers.Timer(1000 / 30);
+        List<DialogEntry> dialogEntries = new List<DialogEntry>();
+        Dictionary<int, DialogEntry> ongoingDialogs = new Dictionary<int, DialogEntry>();
         List<Key> pressedKeys = new List<Key>();
         List<char> activePersons = new List<char>();
         List<char> progressDingbats = new List<char>(){ '-', '\\', '|', '/' };
@@ -36,6 +38,7 @@ namespace DiarizationGroundTruthTool
         {
             InitializeComponent();
 
+            // debug info prints in system context language by default
             CultureInfo useng = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = useng;
             Thread.CurrentThread.CurrentUICulture = useng;
@@ -54,9 +57,9 @@ namespace DiarizationGroundTruthTool
             this.KeyUp += new KeyEventHandler(keyUpWrapper);
             
             txtTime.Text = (new DateTime(0)).ToString("HH:mm:ss");
-            txtDisp.Text = "Records the time when you press a number button and when you release the button.\n" + 
+            displayText("Records the time when you press a number button and when you release the button.\n" + 
                 "3 second prep time before starting.\n" + 
-                "Different keyboard support different number of simultaneous input";
+                "Different keyboard support different number of simultaneous input");
         }
 
         private void runAfterInitialDraw(object sender, EventArgs e)
@@ -172,27 +175,48 @@ namespace DiarizationGroundTruthTool
 
         private void keyDown(char key)
         {
-            if (key <= '9' && key >= '0' && !activePersons.Contains(key))
+            if (updateTimer.Enabled && key <= '9' && key >= '0' && !activePersons.Contains(key))
             {
                 activePersons.Add(key);
                 activePersons.Sort();
+                displayText("\n" + key + " started talking at \t" + getElapsedTime().ToString(@"hh\:mm\:ss"));
+                var newEntry = new DialogEntry(key - '0', getElapsedTime());
+                dialogEntries.Add(newEntry);
+                ongoingDialogs.Add(newEntry.id, newEntry);
             }
         }
 
         private void keyUp(char key)
         {
-            if (key <= '9' && key >= '0' && activePersons.Contains(key))
+            if (updateTimer.Enabled && key <= '9' && key >= '0' && activePersons.Contains(key))
             {
                 activePersons.Remove(key);
                 activePersons.Sort();
+                displayText("\n" + key + " stopped talking at \t" + getElapsedTime().ToString(@"hh\:mm\:ss"));
+                int toRemove = -1;
+                foreach (var kvp in ongoingDialogs)
+                {
+                    if (kvp.Key == key - '0')
+                    {
+                        kvp.Value.endTime = getElapsedTime();
+                        toRemove = kvp.Key;
+                        break;
+                    }
+                }
+                if (toRemove >= 0)
+                    ongoingDialogs.Remove(toRemove);
             }
+        }
+
+        private void displayText(String txt)
+        {
+            txtDisp.AppendText(txt);
+            txtDisp.ScrollToEnd();
         }
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
-            updateTimerInit();
-            updateTimer.Start();
-            updateButtons();
+            start();
         }
 
         /// <summary>
@@ -208,17 +232,22 @@ namespace DiarizationGroundTruthTool
             btnResume.IsEnabled = !running;
         }
 
-        private void updateTimerInit()
+        private void start()
         {
             var now = updateTimerStartedAt = DateTime.Now;
             txtDisp.Text = "Started at " + now.ToString("HH:mm:ss tt");
+            activePersons.Clear();
+            dialogEntries.Clear();
+            ongoingDialogs.Clear();
+            updateTimer.Start();
+            updateButtons();
         }
 
         private void update(object source, System.Timers.ElapsedEventArgs e) 
         {
             // timer runs on its own thread means the thread context defaults back to the system context
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-Us");
 
             DateTime now = e.SignalTime;
             TimeSpan dt = now - lastUpdate;
@@ -253,6 +282,11 @@ namespace DiarizationGroundTruthTool
             
             lastUpdate = now;
         }
+
+        private TimeSpan getElapsedTime()
+        {
+            return lastUpdate - updateTimerStartedAt;
+        }
         
         private void stop()
         {
@@ -263,6 +297,7 @@ namespace DiarizationGroundTruthTool
         private void btnStopAndExport_Click(object sender, RoutedEventArgs e)
         {
             stop();
+            export();
         }
 
         private void btnStop_Click(object sender, RoutedEventArgs e)
@@ -272,12 +307,23 @@ namespace DiarizationGroundTruthTool
 
         private void btnExport_Click(object sender, RoutedEventArgs e)
         {
-            Debug.Assert(!updateTimer.Enabled); 
+            Debug.Assert(!updateTimer.Enabled);
+            export();
         }
 
         private void btnResume_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void export()
+        {
+            String exportText = "";
+            foreach (var dialog in dialogEntries)
+            {
+                exportText += dialog;
+            }
+            System.Console.WriteLine(exportText);
         }
     }
 }
