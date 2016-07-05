@@ -15,8 +15,6 @@ For generating ground truth for speech diarization jobs ... or maybe also for su
 
 ## TODO:
 
-TODO: actually implement the 3 second lead time.
-
 TODO: have the audio run inside the program.
 ______________________________________________
 License: MIT

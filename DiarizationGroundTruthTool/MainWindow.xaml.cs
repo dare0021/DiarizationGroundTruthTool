@@ -30,9 +30,7 @@ namespace DiarizationGroundTruthTool
         Dictionary<int, DialogEntry> ongoingDialogs = new Dictionary<int, DialogEntry>();
         List<Key> pressedKeys = new List<Key>();
         List<char> activePersons = new List<char>();
-
-        DateTime lastUpdate = DateTime.MinValue;
-        DateTime updateTimerStartedAt;
+        
         String exportDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
 
         public MainWindow()
@@ -58,6 +56,7 @@ namespace DiarizationGroundTruthTool
             displayText("Records the time when you press a number button and when you release the button.\n" + 
                 "3 second prep time before starting.\n" + 
                 "Different keyboard support different number of simultaneous input");
+            updateTimer.Start();
         }
 
         private void runAfterInitialDraw(object sender, EventArgs e)
@@ -70,7 +69,7 @@ namespace DiarizationGroundTruthTool
 
         private void closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            updateTimer.Enabled = false;
+            updateTimer.Stop();
             updateTimer.Dispose();
         }
 
@@ -173,7 +172,7 @@ namespace DiarizationGroundTruthTool
 
         private void keyDown(char key)
         {
-            if (updateTimer.Enabled && key <= '9' && key >= '0' && !activePersons.Contains(key))
+            if (stopwatch.IsRunning && key <= '9' && key >= '0' && !activePersons.Contains(key))
             {
                 activePersons.Add(key);
                 activePersons.Sort();
@@ -186,7 +185,7 @@ namespace DiarizationGroundTruthTool
 
         private void keyUp(char key)
         {
-            if (updateTimer.Enabled && key <= '9' && key >= '0' && activePersons.Contains(key))
+            if (stopwatch.IsRunning && key <= '9' && key >= '0' && activePersons.Contains(key))
             {
                 activePersons.Remove(key);
                 activePersons.Sort();
@@ -218,11 +217,11 @@ namespace DiarizationGroundTruthTool
         }
 
         /// <summary>
-        /// updates the buttons' IsEnabled property according to whether the updateTimer is running
+        /// updates the buttons' IsEnabled property according to whether the stopwatch is running
         /// </summary>
         private void updateButtons()
         {
-            var running = updateTimer.Enabled;
+            var running = stopwatch.IsRunning;
             btnRun.IsEnabled = !running;
             btnStopAndExport.IsEnabled = running;
             btnStop.IsEnabled = running;
@@ -232,13 +231,11 @@ namespace DiarizationGroundTruthTool
 
         private void start()
         {
-            var now = updateTimerStartedAt = DateTime.Now;
-            txtDisp.Text = "Started at " + now.ToString("HH:mm:ss tt");
+            txtDisp.Text = "Started at " + DateTime.Now.ToString("HH:mm:ss tt");
             activePersons.Clear();
             dialogEntries.Clear();
             ongoingDialogs.Clear();
-            updateTimer.Start();
-            stopwatch.Start();
+            stopwatch.Restart();
             updateButtons();
         }
 
@@ -249,11 +246,6 @@ namespace DiarizationGroundTruthTool
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-Us");
 
             DateTime now = e.SignalTime;
-            TimeSpan dt = now - lastUpdate;
-            if((source == null) && (e == null))
-            {
-                updateTimerStartedAt = now;
-            }
             try
             {
                 Dispatcher.Invoke(new Action(() => {
@@ -269,10 +261,8 @@ namespace DiarizationGroundTruthTool
             }
             catch (TaskCanceledException e2)
             {
-                ;
+                System.Console.WriteLine(e2.StackTrace);
             }
-            
-            lastUpdate = now;
         }
 
         private TimeSpan getElapsedTime()
@@ -282,7 +272,6 @@ namespace DiarizationGroundTruthTool
         
         private void stop()
         {
-            updateTimer.Stop();
             stopwatch.Stop();
             updateButtons();
         }
@@ -300,13 +289,12 @@ namespace DiarizationGroundTruthTool
 
         private void btnExport_Click(object sender, RoutedEventArgs e)
         {
-            Debug.Assert(!updateTimer.Enabled);
             export();
         }
 
         private void btnResume_Click(object sender, RoutedEventArgs e)
         {
-
+            stopwatch.Start();
         }
 
         private void export()
