@@ -31,8 +31,9 @@ namespace DiarizationGroundTruthTool
         Dictionary<int, DialogEntry> ongoingDialogs = new Dictionary<int, DialogEntry>();
         List<Key> pressedKeys = new List<Key>();
         List<char> activePersons = new List<char>();
-        
+
         String exportDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        String importDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         int countdown;
 
         public MainWindow()
@@ -224,12 +225,25 @@ namespace DiarizationGroundTruthTool
         /// </summary>
         private void updateButtons()
         {
-            var running = stopwatch.IsRunning;
-            btnRun.IsEnabled = !running;
-            btnStopAndExport.IsEnabled = running;
-            btnStop.IsEnabled = running;
-            btnExport.IsEnabled = !running;
-            btnResume.IsEnabled = !running;
+            if (countdownTimer.Enabled)
+            {
+                btnRun.IsEnabled = false;
+                btnStopAndExport.IsEnabled = false;
+                btnStop.IsEnabled = true;
+                btnExport.IsEnabled = false;
+                btnResume.IsEnabled = false;
+                btnOpen.IsEnabled = false;
+            }
+            else
+            {
+                var running = stopwatch.IsRunning;
+                btnRun.IsEnabled = !running;
+                btnStopAndExport.IsEnabled = running;
+                btnStop.IsEnabled = running;
+                btnExport.IsEnabled = !running;
+                btnResume.IsEnabled = !running;
+                btnOpen.IsEnabled = !running;
+            }
         }
 
         private void start()
@@ -289,6 +303,7 @@ namespace DiarizationGroundTruthTool
                 {
                     Dispatcher.Invoke(new Action(() =>
                     {
+                        updateButtons();
                         txtDisp.Text = "Started at " + DateTime.Now.ToString("HH:mm:ss tt");
                     }), System.Windows.Threading.DispatcherPriority.Render);
                 }
@@ -307,6 +322,7 @@ namespace DiarizationGroundTruthTool
         
         private void stop()
         {
+            countdownTimer.Stop();
             stopwatch.Stop();
             updateButtons();
         }
@@ -333,6 +349,31 @@ namespace DiarizationGroundTruthTool
             updateButtons();
         }
 
+        private void btnOpen_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.FileName = "Untitled"; // Default file name
+            dlg.DefaultExt = ".flac"; // Default file extension
+            dlg.Filter = "Free Lossless Audio Codec|*.flac|WAVeform audio file format|*.wav"; // Filter files by extension
+            dlg.CheckPathExists = true;
+            dlg.AddExtension = true;
+            dlg.Multiselect = false; 
+            dlg.ValidateNames = true;
+            dlg.Title = "Open";
+            dlg.InitialDirectory = importDir;
+
+            // Show save file dialog box
+            bool? result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string savePath = dlg.FileName;
+                importDir = savePath.Substring(0, savePath.LastIndexOf('\\'));
+            }
+        }
+
         private void export()
         {
             String exportText = "";
@@ -344,7 +385,7 @@ namespace DiarizationGroundTruthTool
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
             dlg.FileName = "Untitled"; // Default file name
             dlg.DefaultExt = ".txt"; // Default file extension
-            dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
+            dlg.Filter = "Text documents|*.txt"; // Filter files by extension
             dlg.OverwritePrompt = true;
             dlg.CheckPathExists = true;
             dlg.AddExtension = true;

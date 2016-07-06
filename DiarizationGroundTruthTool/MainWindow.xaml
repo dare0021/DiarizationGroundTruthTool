@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiarizationGroundTruthTool"
         mc:Ignorable="d"
-        Title="Diarization GT Tool" Height="350" Width="525" ContentRendered="runAfterInitialDraw">
+        Title="Diarization GT Tool" Height="350" Width="615.196" ContentRendered="runAfterInitialDraw">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo/>
     </Window.TaskbarItemInfo>
@@ -17,6 +17,7 @@
             <Button x:Name="btnStop" DockPanel.Dock="Left" Content="Stop" Margin="0,0,5,0" Padding="5,1" Click="btnStop_Click"/>
             <Button x:Name="btnExport" DockPanel.Dock="Left" Content="Export" Margin="0,0,5,0" Padding="5,1" Click="btnExport_Click"/>
             <Button x:Name="btnResume" DockPanel.Dock="Left" Content="Resume" Margin="0,0,5,0" Padding="5,1" Click="btnResume_Click"/>
+            <Button x:Name="btnOpen" DockPanel.Dock="Left" Content="Open" Margin="0,0,5,0" Padding="5,1" Click="btnOpen_Click"/>
             <TextBlock x:Name="txtPressed" TextWrapping="Wrap" Text="Pressed numbers" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="20"/>
         </DockPanel>
         <TextBox x:Name="txtDisp" Text="Diarization Ground Truth Tool" VerticalScrollBarVisibility="Auto" IsReadOnly="True" IsUndoEnabled="False" HorizontalScrollBarVisibility="Auto"/>
