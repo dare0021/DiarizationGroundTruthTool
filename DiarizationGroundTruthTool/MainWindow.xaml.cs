@@ -383,6 +383,11 @@ namespace DiarizationGroundTruthTool
                 // Save document
                 string filePath = dlg.FileName;
                 importDir = filePath.Substring(0, filePath.LastIndexOf('\\'));
+                if (System.IO.Path.GetExtension(filePath).ToLowerInvariant() == ".flac")
+                {
+                    FlacToWavWrapper.run(filePath, filePath + ".wav");
+                    filePath += ".wav";
+                }
                 mediaPlayer.Open(new Uri(filePath));
             }
         }
