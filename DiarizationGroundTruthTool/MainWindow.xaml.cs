@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,8 +26,13 @@ namespace DiarizationGroundTruthTool
     public partial class MainWindow : Window
     {
         System.Timers.Timer countdownTimer = new System.Timers.Timer(1000);
+        /// <summary>
+        /// Always enabled.
+        /// </summary>
         System.Timers.Timer updateTimer = new System.Timers.Timer(1000 / 60);
         Stopwatch stopwatch = new Stopwatch();
+        MediaPlayer mediaPlayer = new MediaPlayer();
+
         List<DialogEntry> dialogEntries = new List<DialogEntry>();
         Dictionary<int, DialogEntry> ongoingDialogs = new Dictionary<int, DialogEntry>();
         List<Key> pressedKeys = new List<Key>();
@@ -295,6 +301,7 @@ namespace DiarizationGroundTruthTool
 
         private void countdownEvent(object sender, System.Timers.ElapsedEventArgs e)
         {
+            // countdown over. Start main task.
             if (countdown <= 1)
             {
                 countdownTimer.Stop();
@@ -303,6 +310,8 @@ namespace DiarizationGroundTruthTool
                 {
                     Dispatcher.Invoke(new Action(() =>
                     {
+                        mediaPlayer.Stop();
+                        mediaPlayer.Play();
                         updateButtons();
                         txtDisp.Text = "Started at " + DateTime.Now.ToString("HH:mm:ss tt");
                     }), System.Windows.Threading.DispatcherPriority.Render);
@@ -322,6 +331,7 @@ namespace DiarizationGroundTruthTool
         
         private void stop()
         {
+            mediaPlayer.Pause();
             countdownTimer.Stop();
             stopwatch.Stop();
             updateButtons();
@@ -345,21 +355,23 @@ namespace DiarizationGroundTruthTool
 
         private void btnResume_Click(object sender, RoutedEventArgs e)
         {
+            mediaPlayer.Play();
             stopwatch.Start();
             updateButtons();
         }
 
         private void btnOpen_Click(object sender, RoutedEventArgs e)
         {
+            mediaPlayer.Close();
+
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-            dlg.FileName = "Untitled"; // Default file name
             dlg.DefaultExt = ".flac"; // Default file extension
             dlg.Filter = "Free Lossless Audio Codec|*.flac|WAVeform audio file format|*.wav"; // Filter files by extension
             dlg.CheckPathExists = true;
             dlg.AddExtension = true;
             dlg.Multiselect = false; 
             dlg.ValidateNames = true;
-            dlg.Title = "Open";
+            dlg.Title = "Open | Cancel to mute audio";
             dlg.InitialDirectory = importDir;
 
             // Show save file dialog box
@@ -369,8 +381,9 @@ namespace DiarizationGroundTruthTool
             if (result == true)
             {
                 // Save document
-                string savePath = dlg.FileName;
-                importDir = savePath.Substring(0, savePath.LastIndexOf('\\'));
+                string filePath = dlg.FileName;
+                importDir = filePath.Substring(0, filePath.LastIndexOf('\\'));
+                mediaPlayer.Open(new Uri(filePath));
             }
         }
 
