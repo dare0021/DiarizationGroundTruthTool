@@ -76,11 +76,23 @@ namespace DiarizationGroundTruthTool
         {
             txtDisp.ScrollToEnd();
         }
+        
+        public void Dispose(bool disposing)
+        {
+            if (updateTimer.Enabled)
+            {
+                updateTimer.Stop();
+                updateTimer.Dispose();
+            }
+            if (countdownTimer.Enabled)
+            {
+                countdownTimer.Stop();
+                countdownTimer.Dispose();
+            }
+        }
 
         private void closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            updateTimer.Stop();
-            updateTimer.Dispose();
         }
 
         private void keyDownWrapper(object sender, KeyEventArgs e)

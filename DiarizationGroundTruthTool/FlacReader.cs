@@ -12,6 +12,12 @@ namespace DiarizationGroundTruthTool
     class FlacReader : IDisposable
     {
         #region Api
+        enum WriteStatus
+        {
+            Continue,
+            Abort
+        }
+
         const string Dll = "LibFlac";
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)]
@@ -37,7 +43,7 @@ namespace DiarizationGroundTruthTool
 
         // Callbacks
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void WriteCallback(IntPtr context, IntPtr frame, IntPtr buffer, IntPtr userData);
+        delegate WriteStatus WriteCallback(IntPtr context, IntPtr frame, IntPtr buffer, IntPtr userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         delegate void ErrorCallback(IntPtr context, DecodeError status, IntPtr userData);
@@ -177,7 +183,7 @@ namespace DiarizationGroundTruthTool
         #endregion
 
         #region Callbacks
-        private void Write(IntPtr context, IntPtr frame, IntPtr buffer, IntPtr userData)
+        private WriteStatus Write(IntPtr context, IntPtr frame, IntPtr buffer, IntPtr userData)
         {
             FlacFrame f = (FlacFrame)Marshal.PtrToStructure(frame, typeof(FlacFrame));
 
@@ -231,6 +237,8 @@ namespace DiarizationGroundTruthTool
             // Show progress
             //if (totalSamples > 0)
             //    ConsoleProgress.Update(processedSamples, totalSamples);
+
+            return WriteStatus.Continue;
         }
 
         private void Metadata(IntPtr context, IntPtr metadata, IntPtr userData)
